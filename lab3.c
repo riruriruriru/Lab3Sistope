@@ -406,8 +406,30 @@ lista traducirHexToBin(lista dirHex){
 	return listB;
 	
 	}
-void leerArchivoEntrada(){
-	
+lista* leerArchivoEntrada(lista *l){
+	printf("antes abrir\n");
+	FILE *entrada = fopen("archivo1.txt", "r");
+	printf("despues abrir\n");
+	printf("abriendo archivo\n");
+	if(entrada==NULL){
+		printf("Archivo no existe\n");
+		fclose(entrada);
+		return l;
+		}
+	char aux1, aux2, aux3, hex1, hex2, hex3, hex4;
+	while(fscanf(entrada, "%c%c%c%c%c%c%c", &aux1,&aux2,&hex1,&hex2,&hex3,&hex4,&aux3)==7){
+		printf("the worst\n");
+		printf("%c%c%c%c%c%c%c", aux1,aux2,hex1,hex2,hex3,hex4,aux3);
+		l[contador] = insertar(l[contador],hex1, 0);
+		l[contador] = insertar(l[contador],hex2, 1);
+		l[contador] = insertar(l[contador],hex3, 2);
+		l[contador] = insertar(l[contador],hex4, 3);
+		printf("the worst2\n");
+		contador++;
+	}
+	printf("the worst3\n");
+	fclose(entrada);
+	return l;
 	}
 lista* leerArchivoMarcos(int bitsRaiz, int bitsSecundarias, lista *l){
 	printf("antes abrir\n");
@@ -448,7 +470,7 @@ int main(){
 	printf("UWU\n");
 	lista l = crearLista();
 	lista b = crearLista();
-	int numeroMarcos = 16;
+	int numeroMarcos = pow(2,10)*pow(2,6);
 	//lista *arrayLista = (lista*)malloc(5*sizeof(lista));
 	//lista arrayLista[numeroMarcos];
 	lista *arrayLista = (lista*)malloc(numeroMarcos*4*sizeof(lista*));
@@ -459,7 +481,7 @@ int main(){
 		printf("owo\n");
 		}
 	printf("iwi\n");
-	leerArchivoMarcos(2, 2, arrayLista);
+	leerArchivoMarcos(10, 6, arrayLista);
 	for(int i =0;i<numeroMarcos;i++){
 		mostrar(arrayLista[i]);
 		}
