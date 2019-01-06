@@ -18,7 +18,11 @@ typedef struct TablaPagina{
 	int *entradas;
 	
 	}TP;
-
+typedef struct TLB{
+	int numElementos;
+	int **matrizTLB;
+	
+	}TLB;
 
 
 lista crearLista();
@@ -31,6 +35,33 @@ lista anular(lista actual);
 nodo *primero(lista actual);
 void mostrar(lista actual);
 
+void inicializarTLB(TLB *tlb, int entradasTLB){
+	tlb->numElementos = entradasTLB;
+	printf("antes primera memoria a matriz, num entradas: %d\n", entradasTLB);
+	tlb->matrizTLB = (int **)malloc(entradasTLB*sizeof(int*));
+	printf("adespues primera memoria a matriz\n");
+	//*tabla = (Casilla**)malloc(row*sizeof(Casilla));
+	for(int i=0;i<entradasTLB;i++){
+		tlb->matrizTLB[i] = (int*)malloc(16*sizeof(int));
+		}
+	printf("despues darle memoria a matriz\n");
+	for(int i= 0;i<entradasTLB;i++){
+		for(int  j = 0;j<16;j++){
+			printf("indices i-j; %d-%d\n",i,j);
+			tlb->matrizTLB[i][j] = 0;
+			}
+		
+		}
+	}
+void mostrarTLB(TLB *tlb){
+	for(int i= 0;i<tlb->numElementos;i++){
+		for(int  j = 0;j<16;j++){
+			printf("%d ", tlb->matrizTLB[i][j]);
+			}
+		printf("\n");
+		}
+	printf("\n");
+	}
 void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria){
 	tabla->tamEntradas = pow(2,16-bitRaiz-bitSecundaria);
 	tabla->numEntradas = pow(2,16)/tabla->tamEntradas;
@@ -296,32 +327,50 @@ return ordenada;
 }
 //Procedimiento que usa getopt para recibir argumentos respecto al numero de hijos y el flag -m que indica si debe mostrarse informacion por pantalla o no
 //Entradas: recibe el numero de argumentos ingresados, los argumentos y un puntero a las variables numHijos y flag para modificarlas en el scope global del proceso
-void getArguments(int argc, char *argv[], int *numHijos, int *flag){
+void getArguments(int argc, char *argv[], int *bitRaiz, int *bitSecundaria, int *entradasTLB, int *flag){
 	int flags, opt;
-	char *aux3;
+	char *aux3, *aux1, *aux2;
 	aux3 = malloc(10*sizeof(char));
-	if(argc <3){//si se ingresa un numero de argumentos menor a 3, se finaliza la ejecucion del programa
+	aux1 = malloc(10*sizeof(char));
+	aux2 = malloc(10*sizeof(char));
+	if(argc <7){//si se ingresa un numero de argumentos menor a 3, se finaliza la ejecucion del programa
 		printf("Se ingreso un numero incorrecto de argumentos\n");
+		fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]);
 		exit(EXIT_FAILURE);
 		}
-	int nChild = -1;
+	int nTLB = -1, bitsR = -1, bitsS = -1;
 	flags = 0;
-	while ((opt = getopt(argc, argv, "mh:")) != -1) {
+	while ((opt = getopt(argc, argv, "r:s:t:b")) != -1) {
 	   switch (opt) {
-	   case 'm'://se busca el flag -m, en caso de ser encontrado se setea el valor flags = 1, no se considera lo que se ingrese despues del flag -m
+	   case 'b'://se busca el flag -b, en caso de ser encontrado se setea el valor flags = 1, no se considera lo que se ingrese despues del flag -m
 		   flags = 1;
 		   break;
-	   case 'h': //se busca el flag -h
-		   nChild = strtol(optarg, &aux3, 10);//se parsea el argumento ingresado junto al flag -h a entero
-		   if(optarg!=0 && nChild==0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
-				fprintf(stderr, "Uso correcto: %s [-h nchild] [-m]\n", argv[0]);
+	   case 't': //se busca el flag -r
+		   nTLB = strtol(optarg, &aux3, 10);//se parsea el argumento ingresado junto al flag -t a entero
+		   if(optarg!=0 && nTLB==0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
+				fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]);
+				exit(EXIT_FAILURE);
+			   }
+		   //printf("optarg: %s\n", optarg);
+		   break;
+		case 'r': //se busca el flag -r
+		   bitsR = strtol(optarg, &aux1, 10);//se parsea el argumento ingresado junto al flag -r a entero
+		   if(optarg!=0 && nTLB==0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
+				fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]);
+				exit(EXIT_FAILURE);
+			   }
+		   //printf("optarg: %s\n", optarg);
+		   break;
+		case 's': //se busca el flag -r
+		   bitsS = strtol(optarg, &aux2, 10);//se parsea el argumento ingresado junto al flag -t a entero
+		   if(optarg!=0 && nTLB==0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
+				fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]);
 				exit(EXIT_FAILURE);
 			   }
 		   //printf("optarg: %s\n", optarg);
 		   break;
 	   default: /* '?' */
-		   fprintf(stderr, "Uso correcto: %s [-h nchild] [-m]\n",
-				   argv[0]);
+		   fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n",argv[0]);
 		   exit(EXIT_FAILURE);
 	   }
 	}
@@ -329,9 +378,11 @@ void getArguments(int argc, char *argv[], int *numHijos, int *flag){
 	if(flags==1){//si se encontro un flag -m, se setea la variable global flag = 1, respecto al scope del proceso principal
 		(*flag) = 1;
 		}
-	(*numHijos) = nChild; //se iguala la variable numHijos a nChild
-	if(nChild<0){
-		fprintf(stderr, "Usage: %s [-h nchild] [-m]\n", argv[0]); //si la cantidad de hijos es negativa, se retorna un error
+	(*bitRaiz) = nTLB; //se iguala la variable bitRaiz a nTLB
+	(*bitSecundaria) = bitsS;
+	(*entradasTLB) = bitsR;
+	if(bitsS<0||bitsR<0||nTLB<0||bitsS+bitsR>16){
+		fprintf(stderr, "Usage: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]); //si la cantidad de hijos es negativa, se retorna un error
 		exit(EXIT_FAILURE);
 		}
 
@@ -407,6 +458,7 @@ lista traducirHexToBin(lista dirHex){
 	
 	}
 lista* leerArchivoEntrada(lista *l){
+	int contador = 0;
 	printf("antes abrir\n");
 	FILE *entrada = fopen("archivo1.txt", "r");
 	printf("despues abrir\n");
@@ -465,23 +517,31 @@ lista* leerArchivoMarcos(int bitsRaiz, int bitsSecundarias, lista *l){
 	
 	}
 
-int main(){
+int main(int argc, char *argv[]){
 	char caracteres[4] = {'2', '3', '0', '0'};
 	printf("UWU\n");
 	lista l = crearLista();
 	lista b = crearLista();
-	int numeroMarcos = pow(2,10)*pow(2,6);
+	int numeroMarcos = pow(2,2)*pow(2,2);
+	int bitRaiz, bitSecundaria, entradasTLB, flag=0;
 	//lista *arrayLista = (lista*)malloc(5*sizeof(lista));
 	//lista arrayLista[numeroMarcos];
 	lista *arrayLista = (lista*)malloc(numeroMarcos*4*sizeof(lista*));
 	lista *arrayListaBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
+	TLB *tlb;
+	getArguments(argc, argv, &bitRaiz, &bitSecundaria, &entradasTLB, &flag);
+	tlb = (TLB*)malloc(sizeof(TLB*));
+	printf("antes TLB\n");
+	inicializarTLB(tlb, 10);
+	mostrarTLB(tlb);
+	printf("DESPUES TLB\n");
 	printf("MOSTRANDO ARREGLO LISTAS: \n");
 	for(int i = 0;i<numeroMarcos;i++){
 		arrayLista[i] = crearLista();
 		printf("owo\n");
 		}
 	printf("iwi\n");
-	leerArchivoMarcos(10, 6, arrayLista);
+	leerArchivoMarcos(2, 2, arrayLista);
 	for(int i =0;i<numeroMarcos;i++){
 		mostrar(arrayLista[i]);
 		}
