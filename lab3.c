@@ -41,7 +41,27 @@ lista anular(lista actual);
 nodo *primero(lista actual);
 void mostrar(lista actual);
 void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria);
-
+int listaToInt(lista actual, int initOffset, int finOffset){
+	//nodo *nodoPos;
+	int entero=0;
+	char buffer[17];
+	char *aux;
+	aux = (char*)malloc(17*sizeof(char*));
+	for(int i=0; i<16;i++){
+		buffer[i]=0;
+		}
+	buffer[16] = '\0';
+	//nodoPos = actual.cabeza;
+	for(int i = initOffset; i<actual.tamanio-finOffset; i++){
+		buffer[i] = obtener(actual, i);
+		
+		}
+	printf("buffer: %s\n", buffer);
+	//entero = atoi(buffer);
+	printf("%li",strtol(buffer, &aux, 17));
+	entero = strtol(buffer, &aux, 17);
+	return entero;
+	}
 void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
 	tpr->numEntradas = pow(2, bitRaiz);
 	tpr->tamEntradas = 0; //cambiar este valor por el valido o borrarlo porque quizas no sirve
@@ -608,6 +628,7 @@ int main(int argc, char *argv[]){
 	mostrar(l);
 	b = traducirHexToBin(l);
 	mostrar(b);
-	
+	int entero = listaToInt(b, 0, 0);
+	printf("lista a entero: %d\n", entero);
 	return 0;
 	}
