@@ -27,7 +27,7 @@ typedef struct TLB{
 typedef struct TablaPaginaRaiz{
 	int numEntradas;
 	int tamEntradas;
-	TP *entradas;
+	TP **entradas;
 	
 	}TPR;
 
@@ -45,14 +45,23 @@ void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria);
 void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
 	tpr->numEntradas = pow(2, bitRaiz);
 	tpr->tamEntradas = 0; //cambiar este valor por el valido o borrarlo porque quizas no sirve
-	tpr->entradas = (TP*)malloc(sizeof(TP*));
-	inicializarTP(tpr->entradas, bitRaiz, bitSecundaria);
+	tpr->entradas = (TP**)malloc(tpr->numEntradas*sizeof(TP**));
+	for(int i = 0;i<tpr->numEntradas;i++){
+		tpr->entradas[i] = (TP*)malloc(sizeof(TP*));
+		inicializarTP(tpr->entradas[i], bitRaiz, bitSecundaria);
+		}
 	}
 void mostrarTPR(TPR *tpr){
 	int iterador = tpr->numEntradas;
+	printf("		");
+	for(int i=0;i<tpr->entradas[0]->numEntradas;i++){
+		printf("E%d	",i);
+		}
+	printf("\n");
 	for(int i=0; i<iterador;i++){
-		for(int j = 0; j<tpr->entradas->numEntradas;j++){
-			printf("%d ", tpr->entradas->entradas[j]);
+		printf("Entrada %d	", i);
+		for(int j = 0; j<tpr->entradas[i]->numEntradas;j++){
+			printf("%d	", tpr->entradas[i]->entradas[j]);
 			}
 		printf("\n");
 		}
