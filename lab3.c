@@ -41,6 +41,25 @@ lista anular(lista actual);
 nodo *primero(lista actual);
 void mostrar(lista actual);
 void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria);
+
+int compareList(lista actual1, lista actual2, int initOffset, int finOffset){
+	int aux1, aux2;
+	int contador = actual1.tamanio - initOffset - finOffset;
+	for(int i = initOffset; i<actual1.tamanio-finOffset; i++){
+		aux1 = obtener(actual1, i);
+		aux2 = obtener(actual2, i);
+		if(aux1 == aux2){
+			contador--;
+			}
+		
+		}
+	if(contador == 0){
+		return 1;
+		}
+	return 0;
+	}
+
+
 int listaToInt(lista actual, int initOffset, int finOffset){
 	//nodo *nodoPos;
 	int entero=0;
@@ -630,5 +649,7 @@ int main(int argc, char *argv[]){
 	mostrar(b);
 	int entero = listaToInt(b, 0, 0);
 	printf("lista a entero: %d\n", entero);
+	int bool =compareList(b, b, 0, 0);
+	printf("comparacion: %d\n", bool);
 	return 0;
 	}
