@@ -24,6 +24,12 @@ typedef struct TLB{
 	
 	}TLB;
 
+typedef struct TablaPaginaRaiz{
+	int numEntradas;
+	int tamEntradas;
+	TP *entradas;
+	
+	}TPR;
 
 lista crearLista();
 nodo *crearNodo(char elemento);
@@ -34,6 +40,25 @@ nodo *anterior(lista actual, int retroceder);
 lista anular(lista actual);
 nodo *primero(lista actual);
 void mostrar(lista actual);
+void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria);
+
+void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
+	tpr->numEntradas = pow(2, bitRaiz);
+	tpr->tamEntradas = 0; //cambiar este valor por el valido o borrarlo porque quizas no sirve
+	tpr->entradas = (TP*)malloc(sizeof(TP*));
+	inicializarTP(tpr->entradas, bitRaiz, bitSecundaria);
+	}
+void mostrarTPR(TPR *tpr){
+	int iterador = tpr->numEntradas;
+	for(int i=0; i<iterador;i++){
+		for(int j = 0; j<tpr->entradas->numEntradas;j++){
+			printf("%d ", tpr->entradas->entradas[j]);
+			}
+		printf("\n");
+		}
+	printf("\n");
+	
+	}
 
 void inicializarTLB(TLB *tlb, int entradasTLB){
 	tlb->numElementos = entradasTLB;
@@ -66,8 +91,11 @@ void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria){
 	tabla->tamEntradas = pow(2,16-bitRaiz-bitSecundaria);
 	tabla->numEntradas = pow(2,16)/tabla->tamEntradas;
 	tabla->entradas = (int*)malloc(tabla->numEntradas*sizeof(int*));
-	printf("%d\n", tabla->tamEntradas);
-	printf("%d\n", tabla->numEntradas);
+	for(int i=0;i<tabla->numEntradas;i++){
+		tabla->entradas[i] = 0;
+		}
+	printf("tamanio entradas TP %d\n", tabla->tamEntradas);
+	printf("numero entradas TP %d\n", tabla->numEntradas);
 	}
 
 lista crearLista(){
@@ -522,6 +550,7 @@ int main(int argc, char *argv[]){
 	printf("UWU\n");
 	lista l = crearLista();
 	lista b = crearLista();
+	TPR *tpr;
 	int numeroMarcos = pow(2,2)*pow(2,2);
 	int bitRaiz, bitSecundaria, entradasTLB, flag=0;
 	//lista *arrayLista = (lista*)malloc(5*sizeof(lista));
@@ -530,6 +559,11 @@ int main(int argc, char *argv[]){
 	lista *arrayListaBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
 	TLB *tlb;
 	getArguments(argc, argv, &bitRaiz, &bitSecundaria, &entradasTLB, &flag);
+	printf("mostrando TPR y TP\n");
+	tpr = (TPR*)malloc(sizeof(TPR*));
+	inicializarTPR(tpr, bitRaiz, bitSecundaria);
+	mostrarTPR(tpr);
+	printf("finalizando mostrar TPR y TP\n");
 	tlb = (TLB*)malloc(sizeof(TLB*));
 	printf("antes TLB\n");
 	inicializarTLB(tlb, 10);
