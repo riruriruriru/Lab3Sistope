@@ -13,13 +13,18 @@ typedef struct datosLista{
 	nodo *cabeza;
 	nodo *fin;
 } lista;
+//Una tabla de pagina representa una tabla de pagina secundaria, por lo tanto contiene 2^bitSecundaria entradas
 typedef struct TablaPagina{
-	int numEntradas;
-	int tamEntradas;
-	long int *entradas;
-	int elementosUsados;
+	int numEntradas;//se guarda el numero de entradas
+	int tamEntradas; //esto creo que se puede borrar uwu
+	long int *entradas;//esta es la entrada en si, es long int debido a que puede ser de hasta 15 digitos, lo cual no es soportado por un int normal
+	int elementosUsados; //tambien puede borrarse esto, creo
 	
 	}TP;
+//Falta mejorar la logica de la TLB, por ahora es solo una struct con una matriz y una lista de listas pero no hace mucho mas que eso
+//por ahora la logica es que la TLB contiene n listas, segun n sea la cantidad de elementos que pueda tener
+//esas listas guardaran entradas de tablas de pagina, osea valores de marcos
+//la matriz seria lo mismo, hay que ver si es mejor usar matriz o lista de listas uwu
 typedef struct TLB{
 	int numElementos;
 	int elementosUsados;
@@ -27,12 +32,12 @@ typedef struct TLB{
 	lista *listaTLB;
 	
 	}TLB;
-
+//Tabla de pagina raiz de 2^bitRaiz entradas, contiene las tablas de paginas secundarias
 typedef struct TablaPaginaRaiz{
 	int numEntradas;
-	int tamEntradas;
+	int tamEntradas;//no es necesario
 	TP **entradas;
-	int elementosUsados;
+	int elementosUsados;//no es necesario
 	
 	}TPR;
 
@@ -48,6 +53,18 @@ void mostrar(lista actual);
 lista insertar(lista actual, char elemento, int posicion);
 void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria);
 
+int convertBinaryToDecimal(long long n){
+    int decimalNumber = 0, i = 0, remainder;
+    while (n!=0)
+    {
+        remainder = n%10;
+        n /= 10;
+        decimalNumber += remainder*pow(2,i);
+        ++i;
+    }
+    return decimalNumber;
+}
+//Funcionamiento: Recibe dos listas de igual tamanio y compara sus valores entre los offset inicial y final ingresados, si todos los valores comparados son iguales, se retorna un 1
 int compareList(lista actual1, lista actual2, int initOffset, int finOffset){
 	int aux1, aux2;
 	int contador = actual1.tamanio - initOffset - finOffset;
@@ -64,8 +81,10 @@ int compareList(lista actual1, lista actual2, int initOffset, int finOffset){
 		}
 	return 0;
 	}
-
-
+//Entradas: Recibe una lista con un binario de 16 digitos, ademas de un offset inicial y final: 0-16 para transformar el binario completo, x,y para transformar entre rangos x-y
+//Funcionamiento: Recorre una lista de un binario y la guarda en un buffer, luego transforma ese buffer a un long int para representar el binario en forma de int, se borran los ceros a la izquierda
+//Salida: Binario transformado a long int
+//Ejemplo: binario en lista "0000000111110011" se transforma a long int: "111110011"
 long int listaToInt(lista actual, int initOffset, int finOffset){
 	//nodo *nodoPos;
 	long int entero=0;
@@ -81,10 +100,14 @@ long int listaToInt(lista actual, int initOffset, int finOffset){
 		//printf("entero: %li\n", entero);
 		}
 	//printf("buffer: %s\n", buffer);
-	entero = atoi(buffer);
+	//entero = atoi(buffer);
 	//printf("entero: %li", entero);
+	//entero = convertBinaryToDecimal(entero); //por si es que fuera necesario usar el valor en decimal
 	return entero;
 	}
+//Entradas: puntero a tabla de pagina raiz, bits para tablas raiz y bits para tablas secundarias
+//Funcionamiento: inicializa los valores de la TPR, calculando el numero de tablas de paginas que contiene: 2^bitsRaiz, luego inicializa cada tabla de pagina por separado
+//Por lo tanto, la TPR contiene 2^bitRaiz tablas de pagina secundarias
 void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
 	tpr->numEntradas = pow(2, bitRaiz);
 	tpr->tamEntradas = 0; //cambiar este valor por el valido o borrarlo porque quizas no sirve
@@ -92,9 +115,11 @@ void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
 	tpr->elementosUsados = 0;
 	for(int i = 0;i<tpr->numEntradas;i++){
 		tpr->entradas[i] = (TP*)malloc(sizeof(TP*));
-		inicializarTP(tpr->entradas[i], bitRaiz, bitSecundaria);
+		inicializarTP(tpr->entradas[i], bitRaiz, bitSecundaria); //se inicializan las tablas de pagina secundarias
 		}
 	}
+//Entradas: Tabla de pagina raiz
+//Funcionamiento: se muestra con formato una tabla de pagina raiz, mostrando en cada fila una tabla de pagina distinta y en cada columna una entrada de la tabla de pagina correspondiente
 void mostrarTPR(TPR *tpr){
 	int iterador = tpr->numEntradas;
 	printf("		");
@@ -135,6 +160,9 @@ void inicializarTLB(TLB *tlb, int entradasTLB){
 		
 		}
 	}
+//Entradas: tabla de pagina raiz, lista con direcciones de marcos en binario, bit raiz, bit secundaria y n° de bits de marcos
+//Funcionamiento: Se recorre la lista de lista de direcciones en binario y se va llenando secuencialmente cada tabla de pagina secundaria
+//Es decir, primero se llena la tabla secundaria de indice 0, cuando esta se llena completamente, se continua con la 1 y asi sucesivamente
 void llenarTR(TPR *tpr, lista *listaDireccionesBin, int bitRaiz, int bitSecundaria, int bitMarcos, int bitOffset){
 	int iteraciones = pow(2,bitRaiz)*pow(2,bitSecundaria);
 	int numTablasPagina = pow(2, bitRaiz);
@@ -166,6 +194,8 @@ void mostrarTLB(TLB *tlb){
 		}
 	printf("\n");
 	}
+//Entradas: bits de informacion y puntero a tabla de pagina
+//Funcionamiento: inicializa una tabla de pagina con un arreglo de long int de tanto largo como entradas pueda tener la tabla de paginas
 void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria){
 	tabla->tamEntradas = pow(2,16-bitRaiz-bitSecundaria);
 	tabla->numEntradas = pow(2,bitSecundaria);
@@ -604,13 +634,13 @@ lista* leerArchivoEntrada(lista *l){
 		}
 	char aux1, aux2, aux3, hex1, hex2, hex3, hex4;
 	while(fscanf(entrada, "%c%c%c%c%c%c%c", &aux1,&aux2,&hex1,&hex2,&hex3,&hex4,&aux3)==7){
-		printf("the worst\n");
+		//printf("the worst\n");
 		printf("%c%c%c%c%c%c%c", aux1,aux2,hex1,hex2,hex3,hex4,aux3);
 		l[contador] = insertar(l[contador],hex1, 0);
 		l[contador] = insertar(l[contador],hex2, 1);
 		l[contador] = insertar(l[contador],hex3, 2);
 		l[contador] = insertar(l[contador],hex4, 3);
-		printf("the worst2\n");
+		//printf("the worst2\n");
 		contador++;
 	}
 	printf("the worst3\n");
@@ -650,6 +680,18 @@ lista* leerArchivoMarcos(int bitsRaiz, int bitsSecundarias, lista *l){
 	return l;
 	
 	}
+int lineasArchivo(){
+	int contador = 0;
+	char aux1, aux2, aux3, hex1, hex2, hex3, hex4;
+	FILE *entrada;
+	entrada = fopen("archivo1.txt", "r");
+	while(fscanf(entrada, "%c%c%c%c%c%c%c", &aux1,&aux2,&hex1,&hex2,&hex3,&hex4,&aux3)==7){
+		contador++;
+	}
+	rewind(entrada);
+	fclose(entrada);
+	return contador;
+	}
 
 int main(int argc, char *argv[]){
 	char caracteres[4] = {'2', '3', '0', '0'};
@@ -658,20 +700,29 @@ int main(int argc, char *argv[]){
 	lista b = crearLista();
 	TPR *tpr;
 	int bitRaiz, bitSecundaria, entradasTLB, flag=0;
-	//lista *arrayLista = (lista*)malloc(5*sizeof(lista));
-	//lista arrayLista[numeroMarcos]
 	TLB *tlb;
-	getArguments(argc, argv, &bitRaiz, &bitSecundaria, &entradasTLB, &flag);
-	int numeroMarcos = pow(2,bitRaiz)*pow(2,bitSecundaria);
-	int bitOffset = 16-bitRaiz - bitSecundaria;
-	int bitMarcos = 16-bitOffset;
+	getArguments(argc, argv, &bitRaiz, &bitSecundaria, &entradasTLB, &flag); //se reciben los argumentos ingresados por consola
+	int numeroMarcos = pow(2,bitRaiz)*pow(2,bitSecundaria); //se calcula el numero de marcos que hay que leer
+	int bitOffset = 16-bitRaiz - bitSecundaria; //se calcula el numero de bits en direcciones de 16bits que corresponden al offset
+	int bitMarcos = 16-bitOffset; //se calcula el numero de bits en direcciones de 16 bits que corresponden al marco
 	printf("BITS PARA OFFSET: %d - BITS PARA MARCOS: %d - NUMERO MARCOS: %d\n", bitOffset, bitMarcos, numeroMarcos);
-	lista *arrayLista = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
-	lista *arrayListaBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
+	lista *arrayLista = (lista*)malloc(numeroMarcos*16*sizeof(lista*)); //lista listas donde se guardaran las direcciones fisicas en hexadecimal
+	lista *arrayListaBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*)); //lista de listas donde se guardaran las direcciones fisicas en binario
+	int numeroDireccionesLogicas = lineasArchivo();
+	lista *arrayListaDireccionesLogicas = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
+	lista *arrayListaDireccionesLogicasBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
+	for(int i = 0; i<numeroDireccionesLogicas;i++){
+		arrayListaDireccionesLogicas[i] = crearLista();
+		arrayListaDireccionesLogicasBin[i] = crearLista(); //se lee archivo de direcciones logicas
+		}
+	leerArchivoEntrada(arrayListaDireccionesLogicas); //se llenan listas con direcciones logicas en HEX
+	for(int i = 0; i<numeroDireccionesLogicas;i++){
+		arrayListaDireccionesLogicasBin[i] =traducirHexToBin(arrayListaDireccionesLogicas[i]);//se transforman las listas a  binario
+		}
 	printf("NUMERO DE MARCOS: %d\n", numeroMarcos);
 	printf("mostrando TPR y TP\n");
 	tpr = (TPR*)malloc(sizeof(TPR*));
-	inicializarTPR(tpr, bitRaiz, bitSecundaria);
+	inicializarTPR(tpr, bitRaiz, bitSecundaria); //se inicializa una TPR
 	mostrarTPR(tpr);
 	printf("finalizando mostrar TPR y TP\n");
 	tlb = (TLB*)malloc(sizeof(TLB*));
@@ -680,18 +731,18 @@ int main(int argc, char *argv[]){
 	mostrarTLB(tlb);
 	printf("DESPUES TLB\n");
 	printf("MOSTRANDO ARREGLO LISTAS: \n");
-	for(int i = 0;i<numeroMarcos;i++){
+	for(int i = 0;i<numeroMarcos;i++){ //se inicializan tantas listas como n° de marcos se deba leer
 		arrayLista[i] = crearLista();
 		printf("owo\n");
 		}
 	printf("iwi\n");
-	leerArchivoMarcos(bitRaiz, bitSecundaria, arrayLista);
+	leerArchivoMarcos(bitRaiz, bitSecundaria, arrayLista); //se lee el archivo de marcos y se llena la lista "arrayLista"
 	for(int i =0;i<numeroMarcos;i++){
 		mostrar(arrayLista[i]);
 		}
 	printf("TRADUCCIONDE HEX A BIN: \n");
 	for(int i = 0;i<numeroMarcos;i++){
-		arrayListaBin[i] = crearLista();
+		arrayListaBin[i] = crearLista(); //se inicializa cada elemento de la lista de direcciones en binario
 		arrayListaBin[i] =traducirHexToBin(arrayLista[i]);
 		mostrar(arrayListaBin[i]);
 		
