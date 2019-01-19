@@ -16,7 +16,7 @@ typedef struct datosLista{
 typedef struct TablaPagina{
 	int numEntradas;
 	int tamEntradas;
-	int *entradas;
+	long int *entradas;
 	int elementosUsados;
 	
 	}TP;
@@ -75,14 +75,14 @@ long int listaToInt(lista actual, int initOffset, int finOffset){
 		}
 	buffer[16] = '\0';
 	//nodoPos = actual.cabeza;
-	for(int i = initOffset; i<actual.tamanio-finOffset; i++){
+	for(int i = initOffset; i<finOffset; i++){
 		buffer[i] = obtener(actual, i);
-		entero = entero + (buffer[i]-'0')*pow(10,actual.tamanio-finOffset-i-1);
-		printf("entero: %li\n", entero);
+		entero = entero + (buffer[i]-'0')*pow(10,finOffset-i-1);
+		//printf("entero: %li\n", entero);
 		}
-	printf("buffer: %s\n", buffer);
-	//entero = atoi(buffer);
-	printf("entero: %li", entero);
+	//printf("buffer: %s\n", buffer);
+	entero = atoi(buffer);
+	//printf("entero: %li", entero);
 	return entero;
 	}
 void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
@@ -103,9 +103,9 @@ void mostrarTPR(TPR *tpr){
 		}
 	printf("\n");
 	for(int i=0; i<iterador;i++){
-		printf("Entrada %d	", i);
+		printf("TablaP %d	", i);
 		for(int j = 0; j<tpr->entradas[i]->numEntradas;j++){
-			printf("%d	", tpr->entradas[i]->entradas[j]);
+			printf("%li	", tpr->entradas[i]->entradas[j]);
 			}
 		printf("\n");
 		}
@@ -125,18 +125,32 @@ void inicializarTLB(TLB *tlb, int entradasTLB){
 		tlb->matrizTLB[i] = (int*)malloc(16*sizeof(int));
 		tlb->listaTLB[i] = crearLista();
 		}
-	printf("despues darle memoria a matriz\n");
+	//printf("despues darle memoria a matriz\n");
 	for(int i= 0;i<entradasTLB;i++){
 		for(int  j = 0;j<16;j++){
-			printf("indices i-j; %d-%d\n",i,j);
+			//printf("indices i-j; %d-%d\n",i,j);
 			tlb->matrizTLB[i][j] = 0;
 			tlb->listaTLB[i] = insertar(tlb->listaTLB[i], '0', j);
 			}
 		
 		}
 	}
-void llenarTR(TPR *tpr, lista *listaDirecciones){
-	
+void llenarTR(TPR *tpr, lista *listaDireccionesBin, int bitRaiz, int bitSecundaria, int bitMarcos, int bitOffset){
+	int iteraciones = pow(2,bitRaiz)*pow(2,bitSecundaria);
+	int numTablasPagina = pow(2, bitRaiz);
+	int paginasXTabla = pow(2, bitSecundaria);
+	int tablaPagina = 0;
+	int iterador=0;
+	int indiceTP = 0;
+	while(iterador<iteraciones){
+		if(indiceTP==paginasXTabla){
+			indiceTP = 0;
+			tablaPagina++;
+			}
+		tpr->entradas[tablaPagina]->entradas[indiceTP] = listaToInt(listaDireccionesBin[iterador], 0, bitMarcos);
+		iterador++;
+		indiceTP++;
+		}
 	
 	
 	}
@@ -154,13 +168,15 @@ void mostrarTLB(TLB *tlb){
 	}
 void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria){
 	tabla->tamEntradas = pow(2,16-bitRaiz-bitSecundaria);
-	tabla->numEntradas = pow(2,16)/tabla->tamEntradas;
-	tabla->entradas = (int*)malloc(tabla->numEntradas*sizeof(int*));
+	tabla->numEntradas = pow(2,bitSecundaria);
+	tabla->entradas = (long int*)malloc(tabla->numEntradas*sizeof(long int*));
 	for(int i=0;i<tabla->numEntradas;i++){
 		tabla->entradas[i] = 0;
 		}
+	printf("TP\n");
 	printf("tamanio entradas TP %d\n", tabla->tamEntradas);
 	printf("numero entradas TP %d\n", tabla->numEntradas);
+	printf("TP\n");
 	}
 
 lista crearLista(){
@@ -647,6 +663,9 @@ int main(int argc, char *argv[]){
 	TLB *tlb;
 	getArguments(argc, argv, &bitRaiz, &bitSecundaria, &entradasTLB, &flag);
 	int numeroMarcos = pow(2,bitRaiz)*pow(2,bitSecundaria);
+	int bitOffset = 16-bitRaiz - bitSecundaria;
+	int bitMarcos = 16-bitOffset;
+	printf("BITS PARA OFFSET: %d - BITS PARA MARCOS: %d - NUMERO MARCOS: %d\n", bitOffset, bitMarcos, numeroMarcos);
 	lista *arrayLista = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
 	lista *arrayListaBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
 	printf("NUMERO DE MARCOS: %d\n", numeroMarcos);
@@ -679,25 +698,29 @@ int main(int argc, char *argv[]){
 		}
 	
 	printf("$$$$$$$$$$$$$$$$$$$$$$$$\n");
-	TP *tabla;
-	tabla = (TP *)malloc(sizeof(TP*));
-	inicializarTP(tabla, 5, 6);
-	printf("%d\n", tabla->numEntradas);
-	printf("%d\n", tabla->tamEntradas);
+	//TP *tabla;
+	//tabla = (TP *)malloc(sizeof(TP*));
+	//inicializarTP(tabla, 5, 6);
+	//printf("%d\n", tabla->numEntradas);
+	//printf("%d\n", tabla->tamEntradas);
+	llenarTR(tpr, arrayListaBin, bitRaiz, bitSecundaria, bitMarcos, bitOffset);
+	mostrarTPR(tpr);
 	for(int i=0;i<4;i++){
 		l = insertar(l, caracteres[i], i);
 		}
-	mostrar(l);
-	printf("LISTA B:\n");
-	b = traducirHexToBin(l);
-	mostrar(b);
-	long int entero = listaToInt(b, 0, 0);
-	printf("lista a entero: %li\n", entero);
-	int bool =compareList(b, b, 0, 0);
-	printf("comparacion: %d\n", bool);
-	b = modificar(b, '1', 1);
-	printf("B modificada: \n");
-	mostrar(b);
-	printf("TABLAS DE PAGINA: %f\n", pow(2,bitRaiz));
+	//mostrar(l);
+	//printf("LISTA B:\n");
+	//b = traducirHexToBin(l);
+	//mostrar(b);
+	//long int entero = listaToInt(b, 0, 16);
+	//long int entero2 = listaToInt(b, 0, bitMarcos);
+	//printf("lista a entero: %li\n", entero);
+	//printf("lista a entero cortado: %li\n", entero2);
+	//int bool =compareList(b, b, 0, 0);
+	//printf("comparacion: %d\n", bool);
+	//b = modificar(b, '1', 1);
+	//printf("B modificada: \n");
+	//mostrar(b);
+	//printf("TABLAS DE PAGINA: %f\n", pow(2,bitRaiz));
 	return 0;
 	}
