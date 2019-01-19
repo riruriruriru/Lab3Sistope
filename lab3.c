@@ -9,6 +9,7 @@ typedef struct nodoLista{
 
 typedef struct datosLista{
 	int tamanio;
+	int reloj;
 	nodo *cabeza;
 	nodo *fin;
 } lista;
@@ -16,11 +17,14 @@ typedef struct TablaPagina{
 	int numEntradas;
 	int tamEntradas;
 	int *entradas;
+	int elementosUsados;
 	
 	}TP;
 typedef struct TLB{
 	int numElementos;
+	int elementosUsados;
 	int **matrizTLB;
+	lista *listaTLB;
 	
 	}TLB;
 
@@ -28,6 +32,7 @@ typedef struct TablaPaginaRaiz{
 	int numEntradas;
 	int tamEntradas;
 	TP **entradas;
+	int elementosUsados;
 	
 	}TPR;
 
@@ -40,6 +45,7 @@ nodo *anterior(lista actual, int retroceder);
 lista anular(lista actual);
 nodo *primero(lista actual);
 void mostrar(lista actual);
+lista insertar(lista actual, char elemento, int posicion);
 void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria);
 
 int compareList(lista actual1, lista actual2, int initOffset, int finOffset){
@@ -60,12 +66,10 @@ int compareList(lista actual1, lista actual2, int initOffset, int finOffset){
 	}
 
 
-int listaToInt(lista actual, int initOffset, int finOffset){
+long int listaToInt(lista actual, int initOffset, int finOffset){
 	//nodo *nodoPos;
-	int entero=0;
+	long int entero=0;
 	char buffer[17];
-	char *aux;
-	aux = (char*)malloc(17*sizeof(char*));
 	for(int i=0; i<16;i++){
 		buffer[i]=0;
 		}
@@ -73,18 +77,19 @@ int listaToInt(lista actual, int initOffset, int finOffset){
 	//nodoPos = actual.cabeza;
 	for(int i = initOffset; i<actual.tamanio-finOffset; i++){
 		buffer[i] = obtener(actual, i);
-		
+		entero = entero + (buffer[i]-'0')*pow(10,actual.tamanio-finOffset-i-1);
+		printf("entero: %li\n", entero);
 		}
 	printf("buffer: %s\n", buffer);
 	//entero = atoi(buffer);
-	printf("%li",strtol(buffer, &aux, 17));
-	entero = strtol(buffer, &aux, 17);
+	printf("entero: %li", entero);
 	return entero;
 	}
 void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
 	tpr->numEntradas = pow(2, bitRaiz);
 	tpr->tamEntradas = 0; //cambiar este valor por el valido o borrarlo porque quizas no sirve
 	tpr->entradas = (TP**)malloc(tpr->numEntradas*sizeof(TP**));
+	tpr->elementosUsados = 0;
 	for(int i = 0;i<tpr->numEntradas;i++){
 		tpr->entradas[i] = (TP*)malloc(sizeof(TP*));
 		inicializarTP(tpr->entradas[i], bitRaiz, bitSecundaria);
@@ -110,27 +115,39 @@ void mostrarTPR(TPR *tpr){
 
 void inicializarTLB(TLB *tlb, int entradasTLB){
 	tlb->numElementos = entradasTLB;
+	tlb->listaTLB = (lista *)malloc(16*entradasTLB*sizeof(lista*));
 	printf("antes primera memoria a matriz, num entradas: %d\n", entradasTLB);
 	tlb->matrizTLB = (int **)malloc(entradasTLB*sizeof(int*));
+	tlb->elementosUsados = 0;
 	printf("adespues primera memoria a matriz\n");
 	//*tabla = (Casilla**)malloc(row*sizeof(Casilla));
 	for(int i=0;i<entradasTLB;i++){
 		tlb->matrizTLB[i] = (int*)malloc(16*sizeof(int));
+		tlb->listaTLB[i] = crearLista();
 		}
 	printf("despues darle memoria a matriz\n");
 	for(int i= 0;i<entradasTLB;i++){
 		for(int  j = 0;j<16;j++){
 			printf("indices i-j; %d-%d\n",i,j);
 			tlb->matrizTLB[i][j] = 0;
+			tlb->listaTLB[i] = insertar(tlb->listaTLB[i], '0', j);
 			}
 		
 		}
+	}
+void llenarTR(TPR *tpr, lista *listaDirecciones){
+	
+	
+	
 	}
 void mostrarTLB(TLB *tlb){
 	for(int i= 0;i<tlb->numElementos;i++){
 		for(int  j = 0;j<16;j++){
 			printf("%d ", tlb->matrizTLB[i][j]);
 			}
+		printf("\n");
+		printf("LISTA %d TLB: ", i);
+		mostrar(tlb->listaTLB[i]);
 		printf("\n");
 		}
 	printf("\n");
@@ -149,6 +166,7 @@ void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria){
 lista crearLista(){
 	lista nueva;
 	nueva.cabeza = NULL;
+	nueva.reloj = 0;
 	nueva.fin = NULL;
 	nueva.tamanio=0;
 	return nueva;
@@ -162,7 +180,27 @@ nodo *crearNodo(char elemento){
 	nuevo->siguiente=NULL;
 	return nuevo;
 }
-
+lista modificar(lista actual, char elemento, int posicion){
+	nodo *nodoPos = NULL;
+	nodo *nuevo = crearNodo(elemento);
+	if(posicion == 0){
+		actual.cabeza->valor = elemento;
+		return actual;
+		}
+	else if(posicion == actual.tamanio-1){
+		actual.fin->valor = elemento;
+		return actual;
+		}
+	nodoPos = actual.cabeza;
+	for(int i = 0; i < posicion-1; i++){
+		nodoPos = nodoPos->siguiente;
+		}
+	nuevo->siguiente = nodoPos->siguiente->siguiente;
+	nodoPos->siguiente = nuevo;
+	
+	return actual;
+	
+	}
 lista insertar(lista actual, char elemento, int posicion){
 	nodo *nuevo=crearNodo(elemento);
 	nodo *nodoPos=NULL;
@@ -197,6 +235,7 @@ lista insertar(lista actual, char elemento, int posicion){
 	nuevo->siguiente=nodoPos->siguiente;
 	nodoPos->siguiente=nuevo;
 	actual.tamanio++;
+	actual.reloj = 0;
 	return actual;
 	}
 int buscar(lista actual, char elemento){
@@ -204,12 +243,14 @@ int buscar(lista actual, char elemento){
 	int posicion=0;
 	while(nodoPos){
 		if(nodoPos->valor==elemento){
+			actual.reloj = 1;
 			return posicion;
 		}
 		nodoPos=nodoPos->siguiente;
 		posicion++;
 	}
 	posicion=-1;
+	actual.reloj = 0;
 	return posicion;
 }
 char obtener(lista actual, int posicion){
@@ -431,6 +472,7 @@ void getArguments(int argc, char *argv[], int *bitRaiz, int *bitSecundaria, int 
 		   break;
 		case 'r': //se busca el flag -r
 		   bitsR = strtol(optarg, &aux1, 10);//se parsea el argumento ingresado junto al flag -r a entero
+		   printf("BITS RAIZ: %d", bitsR);
 		   if(optarg!=0 && nTLB==0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
 				fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]);
 				exit(EXIT_FAILURE);
@@ -454,9 +496,9 @@ void getArguments(int argc, char *argv[], int *bitRaiz, int *bitSecundaria, int 
 	if(flags==1){//si se encontro un flag -m, se setea la variable global flag = 1, respecto al scope del proceso principal
 		(*flag) = 1;
 		}
-	(*bitRaiz) = nTLB; //se iguala la variable bitRaiz a nTLB
+	(*bitRaiz) = bitsR; //se iguala la variable bitRaiz a nTLB
 	(*bitSecundaria) = bitsS;
-	(*entradasTLB) = bitsR;
+	(*entradasTLB) = nTLB;
 	if(bitsS<0||bitsR<0||nTLB<0||bitsS+bitsR>16){
 		fprintf(stderr, "Usage: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]); //si la cantidad de hijos es negativa, se retorna un error
 		exit(EXIT_FAILURE);
@@ -599,14 +641,15 @@ int main(int argc, char *argv[]){
 	lista l = crearLista();
 	lista b = crearLista();
 	TPR *tpr;
-	int numeroMarcos = pow(2,2)*pow(2,2);
 	int bitRaiz, bitSecundaria, entradasTLB, flag=0;
 	//lista *arrayLista = (lista*)malloc(5*sizeof(lista));
-	//lista arrayLista[numeroMarcos];
-	lista *arrayLista = (lista*)malloc(numeroMarcos*4*sizeof(lista*));
-	lista *arrayListaBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
+	//lista arrayLista[numeroMarcos]
 	TLB *tlb;
 	getArguments(argc, argv, &bitRaiz, &bitSecundaria, &entradasTLB, &flag);
+	int numeroMarcos = pow(2,bitRaiz)*pow(2,bitSecundaria);
+	lista *arrayLista = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
+	lista *arrayListaBin = (lista*)malloc(numeroMarcos*16*sizeof(lista*));
+	printf("NUMERO DE MARCOS: %d\n", numeroMarcos);
 	printf("mostrando TPR y TP\n");
 	tpr = (TPR*)malloc(sizeof(TPR*));
 	inicializarTPR(tpr, bitRaiz, bitSecundaria);
@@ -623,7 +666,7 @@ int main(int argc, char *argv[]){
 		printf("owo\n");
 		}
 	printf("iwi\n");
-	leerArchivoMarcos(2, 2, arrayLista);
+	leerArchivoMarcos(bitRaiz, bitSecundaria, arrayLista);
 	for(int i =0;i<numeroMarcos;i++){
 		mostrar(arrayLista[i]);
 		}
@@ -645,11 +688,16 @@ int main(int argc, char *argv[]){
 		l = insertar(l, caracteres[i], i);
 		}
 	mostrar(l);
+	printf("LISTA B:\n");
 	b = traducirHexToBin(l);
 	mostrar(b);
-	int entero = listaToInt(b, 0, 0);
-	printf("lista a entero: %d\n", entero);
+	long int entero = listaToInt(b, 0, 0);
+	printf("lista a entero: %li\n", entero);
 	int bool =compareList(b, b, 0, 0);
 	printf("comparacion: %d\n", bool);
+	b = modificar(b, '1', 1);
+	printf("B modificada: \n");
+	mostrar(b);
+	printf("TABLAS DE PAGINA: %f\n", pow(2,bitRaiz));
 	return 0;
 	}
