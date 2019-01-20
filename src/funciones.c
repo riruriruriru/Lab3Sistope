@@ -922,16 +922,17 @@ void direccionFisica(lista *dirLog, int nLineas, TPR *tpr, int bitRaiz, int bitS
 		fprintf(salida,"%s\n",hex);
 		
 		for (int j=0; j<nEntradas; j++){
-			if (tlbFIFO->nPagina[i] == nPaginas){
+			//printf("pagina encontrada: %ld\n",tlbFIFO->nPagina[i]);
+			if (tlbFIFO->nPagina[j] == nPaginas){
 				auxFIFO = 1;
 			}
-			if (tlbLRU->nPagina[i] == nPaginas){
+			if (tlbLRU->nPagina[j] == nPaginas){
 				auxLRU = 1;
-				posHit = i;
+				posHit = j;
 			}
-			if (tlbCLOCK->nPagina[i] == nPaginas){
+			if (tlbCLOCK->nPagina[j] == nPaginas){
 				auxCLOCK = 1;
-				posHitClock = i;
+				posHitClock = j;
 			}
 			
 		}
@@ -942,7 +943,7 @@ void direccionFisica(lista *dirLog, int nLineas, TPR *tpr, int bitRaiz, int bitS
 				mostrar(dirLog[i]);
 				printf("\n");
 			}
-			auxFIFO = 0;
+			
 		}
 		if (auxFIFO == 0){
 			Mfifo++;
@@ -952,6 +953,7 @@ void direccionFisica(lista *dirLog, int nLineas, TPR *tpr, int bitRaiz, int bitS
 			max = posMax(remfifo,nEntradas);
 			remfifo[posAux] = max + 1;
 		}
+		auxFIFO = 0;
 		if (auxLRU == 1){
 			Hlru++;
 			if (flag == 1){
@@ -960,7 +962,7 @@ void direccionFisica(lista *dirLog, int nLineas, TPR *tpr, int bitRaiz, int bitS
 				printf("\n");
 			}
 			
-			auxLRU = 0;
+			
 			max = posMax(remlru,nEntradas);
 			remlru[posHit] = max + 1;
 		}
@@ -972,6 +974,7 @@ void direccionFisica(lista *dirLog, int nLineas, TPR *tpr, int bitRaiz, int bitS
 			max = posMax(remlru,nEntradas);
 			remlru[posAux] = max + 1;
 		}
+		auxLRU = 0;
 		if (auxCLOCK == 1){
 			Hclock ++;
 			if (flag == 1){
@@ -979,7 +982,7 @@ void direccionFisica(lista *dirLog, int nLineas, TPR *tpr, int bitRaiz, int bitS
 				mostrar(dirLog[i]);
 				printf("\n");
 			}
-			auxCLOCK = 0;
+			
 			if (remclock[posHitClock] == 0){
 				remclock[posHitClock] == 0;
 			}
@@ -1001,10 +1004,23 @@ void direccionFisica(lista *dirLog, int nLineas, TPR *tpr, int bitRaiz, int bitS
 				puntero = 0;
 			}
 		}
+		auxCLOCK = 0;
 		
 		
 		
 	}
+	
+	/*for (int i=0;i<nEntradas;i++){
+		printf("Pagina FIFO: %ld\n",tlbFIFO->nPagina[i]);
+	}
+	
+	for (int i=0;i<nEntradas;i++){
+		printf("Pagina LRU: %ld\n",tlbLRU->nPagina[i]);
+	}
+	
+	for (int i=0;i<nEntradas;i++){
+		printf("Pagina CLOCK: %ld\n",tlbCLOCK->nPagina[i]);
+	}*/
 	
 	fprintf(salida2,"FIFO\n");
 	fprintf(salida2,"HIT: %d Miss: %d\n",Hfifo,Mfifo);

@@ -1,0 +1,6 @@
+FIFO
+HIT: 2 Miss: 8
+LRU
+HIT: 2 M: 8
+CLOCK
+HIT: 2 M: 8
