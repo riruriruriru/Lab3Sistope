@@ -39,25 +39,16 @@ int compareList(lista actual1, lista actual2, int initOffset, int finOffset){
 //Salida: Binario transformado a long int
 //Ejemplo: binario en lista "0000000111110011" se transforma a long int: "111110011"
 long int listaToInt(lista actual, int initOffset, int finOffset){
-	//nodo *nodoPos;
 	long int entero=0;
 	char buffer[17];
-	//mostrar(actual);
 	for(int i=0; i<16;i++){
 		buffer[i]=0;
 		}
 	buffer[16] = '\0';
-	//nodoPos = actual.cabeza;
 	for(int i = initOffset; i<finOffset; i++){
 		buffer[i] = obtener(actual, i);
 		entero = entero + (buffer[i]-'0')*pow(10,finOffset-i-1);
-		//printf("entero: %li\n", entero);
 		}
-	//printf("buffer: %s\n", buffer);
-	//entero = atoi(buffer);
-	//printf("entero: %li", entero);
-	//entero = convertBinaryToDecimal(entero); //por si es que fuera necesario usar el valor en decimal
-	//printf("%ld\n",entero);
 	return entero;
 	}
 //Entradas: puntero a tabla de pagina raiz, bits para tablas raiz y bits para tablas secundarias
@@ -65,7 +56,7 @@ long int listaToInt(lista actual, int initOffset, int finOffset){
 //Por lo tanto, la TPR contiene 2^bitRaiz tablas de pagina secundarias
 void inicializarTPR(TPR *tpr, int bitRaiz, int bitSecundaria){
 	tpr->numEntradas = pow(2, bitRaiz);
-	tpr->tamEntradas = 0; //cambiar este valor por el valido o borrarlo porque quizas no sirve
+	tpr->tamEntradas = 0; 
 	tpr->entradas = (TP**)malloc(tpr->numEntradas*sizeof(TP**));
 	tpr->elementosUsados = 0;
 	for(int i = 0;i<tpr->numEntradas;i++){
@@ -156,12 +147,10 @@ void inicializarTP(TP *tabla, int bitRaiz, int bitSecundaria){
 	for(int i=0;i<tabla->numEntradas;i++){
 		tabla->entradas[i] = 0;
 		}
-	//printf("TP\n");
-	//printf("tamanio entradas TP %d\n", tabla->tamEntradas);
-	//printf("numero entradas TP %d\n", tabla->numEntradas);
-	//printf("TP\n");
 	}
-
+/*Funciones de lista
+INICIO FUNCIONES DE LISTA
+*/
 lista crearLista(){
 	lista nueva;
 	nueva.cabeza = NULL;
@@ -441,6 +430,10 @@ ordenada =insertar(ordenada,' ',contador);
 actual=anular(actual);
 return ordenada;
 }
+/*
+ FIN FUNCIONES DE LISTA
+*/
+
 //Procedimiento que usa getopt para recibir argumentos respecto al numero de hijos y el flag -m que indica si debe mostrarse informacion por pantalla o no
 //Entradas: recibe el numero de argumentos ingresados, los argumentos y un puntero a las variables numHijos y flag para modificarlas en el scope global del proceso
 void getArguments(int argc, char *argv[], int *bitRaiz, int *bitSecundaria, int *entradasTLB, int *flag){
@@ -461,7 +454,7 @@ void getArguments(int argc, char *argv[], int *bitRaiz, int *bitSecundaria, int 
 	   case 'b'://se busca el flag -b, en caso de ser encontrado se setea el valor flags = 1, no se considera lo que se ingrese despues del flag -m
 		   flags = 1;
 		   break;
-	   case 't': //se busca el flag -r
+	   case 't': //se busca el flag -t
 		   nTLB = strtol(optarg, &aux3, 10);//se parsea el argumento ingresado junto al flag -t a entero
 		   if(optarg!=0 && nTLB==0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
 				fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]);
@@ -478,8 +471,8 @@ void getArguments(int argc, char *argv[], int *bitRaiz, int *bitSecundaria, int 
 			   }
 		   //printf("optarg: %s\n", optarg);
 		   break;
-		case 's': //se busca el flag -r
-		   bitsS = strtol(optarg, &aux2, 10);//se parsea el argumento ingresado junto al flag -t a entero
+		case 's': //se busca el flag -s
+		   bitsS = strtol(optarg, &aux2, 10);//se parsea el argumento ingresado junto al flag -s a entero
 		   if(optarg!=0 && nTLB==0){//si no se ingresa un argumento junto a -h o si no se logra parsear el argumento ingresado, se considera como invalido
 				fprintf(stderr, "Uso correcto: %s [-r bitsRaiz][-s bitsSecundaria][-t entradasTLB] [-b]\n", argv[0]);
 				exit(EXIT_FAILURE);
@@ -514,15 +507,17 @@ lista reverseLista(lista actual){
 	lista nueva = crearLista();
 	int contador = actual.tamanio;
 	int elementos = 0;
-	while(contador>0){
-		//int pos = 
+	while(contador>0){ 
 		nueva = insertar(nueva, anterior(actual,contador)->valor, elementos);
 		contador--;
 		elementos++;
 		}
 	return nueva;
 	}
-
+//Entrada: lista de direcciones hexadecimal
+//Funcionamiento: Se recorre la lista con caracteres hexadecimales, se transforma cada uno a un binario de 4 dígitos y se ingresa en una lista, luego se llama a la funcion reverse
+//para que el binario quede representado de izquierda a derecha en cuanto a sus bits mas significativos EJ: 0xF100 -> 1111 0001 0000 0000
+//Salida: lista de tamaño 16 con traduccion de hexadecimal a binario
 lista traducirHexToBin(lista dirHex){
 	lista listB = crearLista();
 	int i = 0;
